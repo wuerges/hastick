@@ -25,3 +25,19 @@ Opening a shell with nix enabled:
 
 
 Obtained from <https://maybevoid.com/posts/2019-01-27-getting-started-haskell-nix.html>
+
+
+Installed these extensions:
+
+- Nix env selector:
+<https://marketplace.visualstudio.com/items?itemName=arrterian.nix-env-selector>
+- __Simple__ GHC Integration:
+<https://marketplace.visualstudio.com/items?itemName=dramforever.vscode-ghc-simple>
+
+From now own, start vscode from nix shell:
+
+```
+nix-shell release.nix
+code .
+```
+
