@@ -21,6 +21,7 @@ library
   hs-source-dirs:      src/lib
   default-language:    Haskell2010
   exposed-modules:     Lib
+                     , Logic
 
 executable hastick
   main-is:             Main.hs

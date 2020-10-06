@@ -1,3 +1,5 @@
 module Lib where
 
-someFunc = putStrLn "hello"
+import Logic
+
+someFunc = print testCircuit
