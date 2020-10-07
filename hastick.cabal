@@ -25,6 +25,7 @@ library
   exposed-modules:     Lib
                      , Logic
                      , Parser
+                     , AST
 
 executable hastick
   main-is:             Main.hs
