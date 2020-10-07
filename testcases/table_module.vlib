@@ -1,0 +1,35 @@
+`timescale 1ps/1ps
+primitive udp_xbuf (o, i, check_signal);
+  output o;
+  input i, check_signal;
+  table      
+  // i check_signal : o
+      0   1   : 0;
+      1   1   : 1;
+      x   1   : 1;
+   endtable
+endprimitive
+primitive udp_dff (q, d, clk, clr, set, notifier);
+   output q;
+   input  d, clk, clr, set, notifier;
+   reg    q;
+   table
+      ?   ?   0   ?   ? : ? : 0 ;
+      ?   ?   1   0   ? : ? : 1 ;
+      ?   ?   1   x   ? : 0 : x ;
+      0 (01)  ?   1   ? : ? : 0 ;
+      0   *   ?   1   ? : 0 : 0 ;
+      1 (01)  1   ?   ? : ? : 1 ;
+      1   *   1   ?   ? : 1 : 1 ;
+      ? (1?)  1   1   ? : ? : - ;
+      ? (?0)  1   1   ? : ? : - ;
+      ?   ? (?1)  ?   ? : ? : - ;
+      ?   ?   ? (?1)  ? : ? : - ;
+      *   ?   ?   ?   ? : ? : - ;
+      ?   ?   ?   ?   * : ? : x ;
+      x   *   ?   ?   ? : 1 : 1 ;
+      x   *   ?   ?   ? : 0 : 0 ;
+      x   *   ?   ?   ? : x : 0 ;
+      ?   ?   1   1   0 : x : 0 ;
+   endtable
+endprimitive

@@ -1,7 +1,11 @@
 module Main where
 
 import Lib
+import Parser
+import System.Environment (getArgs)
 
 main :: IO ()
 -- main = putStrLn "Hello, Haskell!"
-main = someFunc
+main = do 
+    [a] <- getArgs
+    parseFile a >>= print
