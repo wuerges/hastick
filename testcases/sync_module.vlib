@@ -1,3 +1,4 @@
+`timescale 1ps/1ps
 module GEN_SYNC2C_D1 (clk,d,clr_,q);
   input clk;
   input d;

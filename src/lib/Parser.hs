@@ -10,6 +10,8 @@ import Text.Parsec.Combinator
 import qualified Text.Parsec.Token  as P
 import Text.Parsec.Language (javaStyle)
 
+import Control.Arrow
+
 import AST
 
 
@@ -30,18 +32,14 @@ decl keyword = do
     return outputs
     
 
-col :: Parser String
-col = identifier
-    
-
 tableRow = do
-    part1 <- many col
-    part2 <- many (colon >> col)
+    part1 <- many logicValue
+    part2 <- many (colon >> logicValue)
     _ <- semi
     return $ part1 ++ part2
 
 
-parseTable :: Parser [[String]]
+parseTable :: Parser [[Trans]]
 parseTable = do
     _ <- reserved "table"
     rows <- many tableRow
@@ -57,14 +55,17 @@ primitive = do
     _ <- semi
     outputs <- decl "output"
     inputs <- decl "input"
+    regs <- option [] (decl "reg")
     tabl <- parseTable
-    return $ Primitive ios inputs outputs tabl
+    reserved "endprimitive"
+    return $ Primitive ios inputs outputs regs tabl
 
 
 parseVerilog :: Parser AST
 parseVerilog = do
     ts <- parseTimescale
     ps <- many primitive
+    eof
     return $ AST { timescale = ts, primitives = ps }
 
 parseFile :: FilePath -> IO (Either ParseError AST)
@@ -83,3 +84,28 @@ commaSep = P.commaSep lexer
 semi = P.semi lexer
 colon = P.colon lexer
 stringLiteral = P.stringLiteral lexer
+lexeme = P.lexeme lexer
+
+
+tupleValue :: Parser (LV, LV)
+tupleValue = 
+    parens $ do 
+        a <- basicValue
+        b <- basicValue
+        return (a, b)
+
+basicValue :: Parser LV
+basicValue = 
+        (char '0' >> return Zero)
+    <|> (char '1' >> return One)
+    <|> (char '?' >> return Unknown)
+    <|> (char '*' >> return Every)
+    <|> (char 'x' >> return DontCare)
+    <|> (char '-' >> return Dash)
+
+
+logicValue :: Parser Trans
+logicValue = lexeme
+   (    (basicValue >>= return . Basic)
+    <|> (tupleValue >>= return . uncurry Tuple)
+   )
