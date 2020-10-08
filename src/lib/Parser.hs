@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, DuplicateRecordFields, RecordWildCards #-}
 module Parser where 
 
 
@@ -7,13 +7,19 @@ import Text.Parsec.Error (ParseError)
 import Text.Parsec.Char
 import Text.Parsec.Prim
 import Text.Parsec.Combinator
-import qualified Text.Parsec.Token  as P
+import qualified Text.Parsec.Token as P
 import Text.Parsec.Language (javaStyle)
 
 import Control.Arrow
+import Control.Monad.State
 
 import AST
 
+-- data ParserState = Empty | VMod VModule
+
+-- type Parser = Parsec String ParserState
+
+-- type Parser s t = ParsecT s () IO
 
 parseTimescale :: Parser Timescale
 parseTimescale = do
@@ -61,12 +67,42 @@ primitive = do
     return $ Primitive ios inputs outputs regs tabl
 
 
+parseVModule :: Parser VModule
+parseVModule = do
+    reserved "module"
+    name <- identifier
+    ports <- parens (commaSep identifier)
+    semi
+    decls <- many parseDecl
+    reserved "endmodule"
+    return $ makeVModule name decls
+
+
+parseDecl :: Parser Decl
+parseDecl = 
+        (decl "reg" >>= return . Regs)
+    <|> (decl "wire" >>= return . Wire)
+    <|> (decl "input" >>= return . Inputs)
+    <|> (decl "output" >>= return . Outputs)
+
+-- parseVModuleBody :: StateT VModule Parser ()
+-- parseVModuleBody = 
+--     parseRegsDecl <|> parseRegsDecl
+
+-- parseRegsDecl :: StateT VModule Parser ()
+-- parseRegsDecl = 
+--     (do decl_regs <- lift $ decl "regs"
+--         modify $ \x@VModule{regs = rs, ..} -> (x :: VModule) { regs = decl_regs ++ rs}
+--     )
+
+    
 parseVerilog :: Parser AST
 parseVerilog = do
     ts <- parseTimescale
-    ps <- many primitive
+    ps <- many $ (primitive >>= return . PrimitiveEntity) 
+             <|> (parseVModule >>= return . VModuleEntity)
     eof
-    return $ AST { timescale = ts, primitives = ps }
+    return $ AST { timescale = ts, entities = ps }
 
 parseFile :: FilePath -> IO (Either ParseError AST)
 parseFile path = parseFromFile parseVerilog path
