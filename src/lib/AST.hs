@@ -1,6 +1,8 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 module AST where
 
+import Logic
+
 data Timescale = Timescale Integer Integer
     deriving Show
 
@@ -37,6 +39,7 @@ data VModule = VModule {
 data Decl = Regs [String] 
           | Wire [String] 
           | Always 
+          | PortDecl (Port String)
           | Inputs [String] 
           | Outputs [String]
 

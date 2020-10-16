@@ -130,6 +130,19 @@ parseAlways = do
     return Always
 
 
+portDecl = (reserved "and" <|> reserved "or" <|> reserved "not" <|> reserved "buf" <|> reserved "xor")
+        >> parens (commaSep identifier) 
+        >> semi
+        >> return Always
+
+identifierEvent = 
+    optional (reserved "posedge" <|> reserved "negedge") >> identifier
+
+specify = bet (reserved "specify") (reserved "endspecify") $ do
+    many (parens (identifierEvent >> symbol "=>" >> identifier) 
+          >> symbol "="
+          >> parens (commaSep natural)
+          >> semi)
 
 parseDecl :: Parser Decl
 parseDecl = 
@@ -137,6 +150,9 @@ parseDecl =
     <|> (decl "wire" >>= return . Wire)
     <|> (decl "input" >>= return . Inputs)
     <|> (decl "output" >>= return . Outputs)
+    <|> (decl "supply1" >>= return . Inputs)
+    <|> portDecl
+    <|> (specify >> return Always)
     <|> parseAlways
 
 -- parseVModuleBody :: StateT VModule Parser ()
