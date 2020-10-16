@@ -9,8 +9,8 @@ version:             0.1.0.0
 -- bug-reports:
 -- license:
 license-file:        LICENSE
--- author:
--- maintainer:
+author:              Emilio Wuerges
+maintainer:          wuerges@gmail.com
 -- copyright:
 -- category:
 build-type:          Simple
