@@ -14,6 +14,8 @@ import Control.Arrow
 import Control.Monad.State
 
 import AST
+import Logic
+
 
 -- data ParserState = Empty | VMod VModule
 
@@ -67,15 +69,63 @@ primitive = do
     return $ Primitive ios inputs outputs regs tabl
 
 
+moduleDecls = 
+        (reserved "endmodule" >> return []) 
+    <|> (do decl <- parseDecl ; rem <- moduleDecls ; return $ decl : rem )
+
+
 parseVModule :: Parser VModule
 parseVModule = do
     reserved "module"
     name <- identifier
     ports <- parens (commaSep identifier)
     semi
-    decls <- many parseDecl
-    reserved "endmodule"
+    decls <- moduleDecls
     return $ makeVModule name decls
+
+event :: Parser ()
+event = ((reserved "posedge" >> identifier >> return ())
+    <|> (reserved "negedge" >> identifier >> return ())
+    <|> (identifier >> return ())
+    <|> parens event) >> option () (reserved "or" >> event)
+
+parseSensList = symbol "@" >> parens event
+
+
+logicOperator = reserved "or"
+            <|> reserved "and"
+            <|> (symbol "+" >> return ())
+            <|> (symbol "-" >> return ())
+
+packedArray = braces (commaSep identifier)
+
+literalValue = lexeme $ natural >> symbol "'" >> (oneOf "hbdo") >> alphaNum
+
+valueExpr = ((symbol "~" >> valueExpr)
+         <|> (packedArray  >> return ())
+         <|> (literalValue  >> return ())
+         <|> (identifier  >> return ())
+         <|> parens valueExpr) >> option () (logicOperator >> valueExpr)
+
+attr = valueExpr >> symbol "<=" >> valueExpr
+
+expr = (reserved "if" >> parens valueExpr >> parseBlock >>
+            (option () (reserved "else" >> parseBlock)))
+   <|> (attr >> semi >> return ())
+
+block = between (reserved "begin") (reserved "end")
+
+parseBlock = block (many expr >> return ())
+            --  (reserved "begin" >> many expr >> reserved "end")
+         <|> expr
+
+parseAlways :: Parser Decl
+parseAlways = do
+    reserved "always"
+    parseSensList
+    parseBlock
+    return Always
+
 
 
 parseDecl :: Parser Decl
@@ -84,6 +134,7 @@ parseDecl =
     <|> (decl "wire" >>= return . Wire)
     <|> (decl "input" >>= return . Inputs)
     <|> (decl "output" >>= return . Outputs)
+    <|> parseAlways
 
 -- parseVModuleBody :: StateT VModule Parser ()
 -- parseVModuleBody = 
@@ -121,6 +172,7 @@ semi = P.semi lexer
 colon = P.colon lexer
 stringLiteral = P.stringLiteral lexer
 lexeme = P.lexeme lexer
+symbol = P.symbol lexer 
 
 
 tupleValue :: Parser (LV, LV)

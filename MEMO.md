@@ -41,3 +41,8 @@ nix-shell release.nix
 code .
 ```
 
+Running the project:
+
+```
+cabal run hastick testcases/table_module.vlib
+```

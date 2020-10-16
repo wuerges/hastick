@@ -4,10 +4,10 @@ data Net t = Net t
     deriving Show
 
 data Port t = 
-    And (Net t) [(Net t)]
-    | Or (Net t) [(Net t)]
-    | Not [(Net t)] (Net t)
-    | Buf [(Net t)] (Net t)
+    And t [t]
+    | Or t [t]
+    | Not [t] t
+    | Buf [t] t
     deriving Show
 
 data Reg t = Reg t
@@ -48,6 +48,6 @@ testModule = Module {
     , procs = [
         Proc 
             (mkSens ["d", "clk", "clr", "set", "notifier"])
-            (And (Net "q") [])
+            (And "q" [])
     ]
 }
