@@ -69,18 +69,13 @@ primitive = do
     return $ Primitive ios inputs outputs regs tabl
 
 
-moduleDecls = 
-        (reserved "endmodule" >> return []) 
-    <|> (do decl <- parseDecl ; rem <- moduleDecls ; return $ decl : rem )
-
-
 parseVModule :: Parser VModule
 parseVModule = do
     reserved "module"
     name <- identifier
     ports <- parens (commaSep identifier)
     semi
-    decls <- moduleDecls
+    decls <- betend (reserved "endmodule") parseDecl
     return $ makeVModule name decls
 
 event :: Parser ()
@@ -113,9 +108,15 @@ expr = (reserved "if" >> parens valueExpr >> parseBlock >>
             (option () (reserved "else" >> parseBlock)))
    <|> (attr >> semi >> return ())
 
-block = between (reserved "begin") (reserved "end")
 
-parseBlock = block (many expr >> return ())
+bet b e f = b >> betend e f
+betend e f = (e >> return [])
+         <|> (do x <- f; m <- betend e f; return (x:m))
+
+block f = bet (reserved "begin") (reserved "end") f
+
+
+parseBlock = (block expr >> return ())
             --  (reserved "begin" >> many expr >> reserved "end")
          <|> expr
 
