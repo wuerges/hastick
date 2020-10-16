@@ -33,6 +33,8 @@ parseTimescale = do
     _ <- identifier
     return $ Timescale x y
 
+
+
 decl keyword = do
     _ <- reserved keyword
     outputs <- commaSep identifier
@@ -152,9 +154,10 @@ parseVerilog :: Parser AST
 parseVerilog = do
     ts <- parseTimescale
     ps <- many $ (primitive >>= return . PrimitiveEntity) 
-             <|> (parseVModule >>= return . VModuleEntity)
+    reserved "`celldefine"
+    ms <- many $ (parseVModule >>= return . VModuleEntity)
     eof
-    return $ AST { timescale = ts, entities = ps }
+    return $ AST { timescale = ts, entities = ps ++ ms }
 
 parseFile :: FilePath -> IO (Either ParseError AST)
 parseFile path = parseFromFile parseVerilog path

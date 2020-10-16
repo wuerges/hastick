@@ -33,3 +33,4 @@ primitive udp_dff (q, d, clk, clr, set, notifier);
       ?   ?   1   1   0 : x : 0 ;
    endtable
 endprimitive
+`celldefine
